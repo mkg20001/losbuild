@@ -50,10 +50,12 @@ contains() {
 
 add_snip() {
   mk_snip "$1"
-  cp $SELF/$1.xml .repo/manifests/snippets/$1.xml
-  if ! contains .repo/manifests/default.xml "$SNIP"; then
-    sed "s|</manifest>|$SNIP</manifest>" > .repo/manifests/default.xml
-  fi
+  mkdir -p .repo/local_manifests
+  cp $SELF/$1.xml .repo/local_manifests/$1.xml
+  # cp $SELF/$1.xml .repo/manifests/snippets/$1.xml
+  # if ! contains .repo/manifests/default.xml "$SNIP"; then
+  #   sed "s|</manifest>|$SNIP</manifest>|" > .repo/manifests/default.xml
+  # fi
 }
 
 pre_los() {
@@ -85,8 +87,12 @@ pre_fdroid() {
 }
 
 pre_muppets() {
-  # from https://forum.xda-developers.com/showpost.php?s=a6ee98b07b1b0a2f4004b902a65d9dcd&p=76981184&postcount=4 and https://github.com/TheMuppets/manifests
-  add_snip muppets
+  # from https://forum.xda-developers.com/showpost.php?s=a6ee98b07b1b0a2f4004b902a65d9dcd&p=76981184&postcount=4 and https://github.com/TheMuppets/manifests & https://gist.github.com/fourkbomb/261ced58cd029c5f7742350aafdd9825
+  echo '<?xml version="1.0" encoding="UTF-8"?>
+  <manifest>
+    <project name="TheMuppets/proprietary_vendor_'"$VENDOR"'" path="vendor/'"$VENDOR"'"/>
+  </manifest>' > $SELF/muppets_local.xml
+  add_snip muppets_local
 }
 
 post_muppets() {

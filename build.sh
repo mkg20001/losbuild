@@ -8,11 +8,14 @@ DEVICE="marlin"
 VENDOR="google"
 VERSION="17.1"
 
+PACKAGES="fdroid gapps"
+
 GAPPS_VARIANT="nano"
 
 # code
 
 SLUG="$VENDOR/$DEVICE"
+PACKAGES="muppets los $PACKAGES"
 
 mkdir -p ~/bin
 mkdir -p ~/android/lineage
@@ -27,6 +30,7 @@ if [ -d "$HOME/bin" ] ; then
 fi
 
 pushd ~/android/lineage
+
 if [ ! -e .repo ]; then
   repo init -u https://github.com/LineageOS/android.git -b "lineage-$DEVICE"
   repo sync
@@ -52,13 +56,56 @@ add_snip() {
   fi
 }
 
+pre_los() {
+  ::
+  # pushd "~/android/lineage/device/$SLUG"
+  # ./extract-files.sh
+  # popd
+}
+
+post_los() {
+  ::
+  breakfast "$DEVICE"
+}
+
+pre_gapps() {
+  # from https://github.com/opengapps/aosp_build#getting-started
+  add_snip opengapps
+}
+
+post_gapps() {
+  pushd vendor/fdroid
+  ./get_packages.sh
+  popd
+}
+
+pre_fdroid() {
+  # from https://gitlab.com/fdroid/android_vendor_fdroid#getting-the-packages
+  add_snip fdroid
+}
+
+pre_muppets() {
+  # from https://forum.xda-developers.com/showpost.php?s=a6ee98b07b1b0a2f4004b902a65d9dcd&p=76981184&postcount=4 and https://github.com/TheMuppets/manifests
+  add_snip muppets
+}
+
+post_muppets() {
+  ::
+  # nothing, congrats!
+}
+
+post_fdroid() {
+  DEV_FILE="device/$SLUG/device.mk"
+  cp "$DEV_FILE" "$DEV_FILE.bak"
+  sed -i "1s|^|GAPPS_VARIANT := $GAPPS_VARIANT|" "$DEV_FILE"
+  echo '$(call inherit-product, vendor/opengapps/build/opengapps-packages.mk)' >> "$DEV_FILE"
+}
+
 # PRE
 
-# from https://github.com/opengapps/aosp_build#getting-started
-add_snip opengapps
-
-# from https://gitlab.com/fdroid/android_vendor_fdroid#getting-the-packages
-add_snip fdroid
+for $pkg in $PACKAGES; do
+  "pre_$pkg"
+done
 
 # MAIN
 
@@ -68,26 +115,9 @@ repo sync
 
 source build/envsetup.sh
 
-# los
-
-breakfast "$DEVICE"
-
-pushd "~/android/lineage/device/$SLUG"
-./extract-files.sh
-popd
-
-# fdroid
-
-pushd vendor/fdroid
-./get_packages.sh
-popd
-
-# gapps
-
-DEV_FILE="device/$SLUG/device.mk"
-cp "$DEV_FILE" "$DEV_FILE.bak"
-sed -i "1s|^|GAPPS_VARIANT := $GAPPS_VARIANT|" "$DEV_FILE"
-echo '$(call inherit-product, vendor/opengapps/build/opengapps-packages.mk)' >> "$DEV_FILE"
+for $pkg in $PACKAGES; do
+  "post_$pkg"
+done
 
 # build
 

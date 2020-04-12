@@ -56,6 +56,7 @@ let
     profile = ''
       export USE_CCACHE=1
       ccache -M 50G
+      export TMPDIR=/tmp
     '';
   };
 

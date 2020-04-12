@@ -71,6 +71,8 @@ post_gapps() {
   sed -i "1s|^|GAPPS_VARIANT := $GAPPS_VARIANT\n|" "$DEV_FILE"
   echo '$(call inherit-product, vendor/opengapps/build/opengapps-packages.mk)' >> "$DEV_FILE"
 
+  echo > vendor/opengapps/build/modules/CarrierServices/Android.mk # los has it built-in
+
   for src in vendor/opengapps/sources/*; do
     pushd $src
     git lfs pull

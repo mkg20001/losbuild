@@ -8,7 +8,7 @@ DEVICE="marlin"
 VENDOR="google"
 VERSION="17.1"
 
-PACKAGES="fdroid gapps"
+PACKAGES="fdroid gapps su twrp" # charger
 
 GAPPS_VARIANT="nano"
 
@@ -30,7 +30,7 @@ mk_snip() {
 }
 
 contains() {
-  if ! cat "$1" | grep "$2" > /dev/null 2> /dev/null; then
+  if cat "$1" | grep "$2" > /dev/null 2> /dev/null; then
     return 0
   else
     return 1
@@ -67,9 +67,11 @@ pre_gapps() {
 
 post_gapps() {
   DEV_FILE="device/$SLUG/device-$DEVICE.mk"
-  cp "$DEV_FILE" "$DEV_FILE.bak"
-  sed -i "1s|^|GAPPS_VARIANT := $GAPPS_VARIANT\n|" "$DEV_FILE"
-  echo '$(call inherit-product, vendor/opengapps/build/opengapps-packages.mk)' >> "$DEV_FILE"
+  if ! contains "$DEV_FILE" "opengapps"; then
+    # cp "$DEV_FILE" "$DEV_FILE.bak"
+    sed -i "1s|^|GAPPS_VARIANT := $GAPPS_VARIANT\n|" "$DEV_FILE"
+    echo '$(call inherit-product, vendor/opengapps/build/opengapps-packages.mk)' >> "$DEV_FILE"
+  fi
 
   echo > vendor/opengapps/build/modules/CarrierServices/Android.mk # los has it built-in
 
@@ -83,6 +85,15 @@ post_gapps() {
 pre_fdroid() {
   # from https://gitlab.com/fdroid/android_vendor_fdroid#getting-the-packages
   add_snip fdroid
+}
+
+post_fdroid() {
+  pushd vendor/fdroid
+  bash $SELF/make-fdroid-list.sh
+  echo "-app/org.fdroid.fdroid_1001002.apk:app/FDroid.apk;PRESIGNED
+-priv-app/org.fdroid.fdroid.privileged_2070.apk:priv-app/FDroidPrivilegedExtension.apk;PRESIGNED"
+  ./get_packages.sh
+  popd
 }
 
 pre_muppets() {
@@ -99,13 +110,28 @@ post_muppets() {
   # nothing, congrats!
 }
 
-post_fdroid() {
-  pushd vendor/fdroid
-  bash $SELF/make-fdroid-list.sh
-  echo "-app/org.fdroid.fdroid_1001002.apk:app/FDroid.apk;PRESIGNED
--priv-app/org.fdroid.fdroid.privileged_2070.apk:priv-app/FDroidPrivilegedExtension.apk;PRESIGNED"
-  ./get_packages.sh
-  popd
+pre_twrp() {
+  export WITH_TWRP=true
+}
+
+post_twrp() {
+  :
+}
+
+pre_su() {
+  export WITH_SU=true
+}
+
+post_su() {
+  :
+}
+
+pre_charger() {
+  export WITH_LINEAGE_CHARGER=true
+}
+
+post_charger() {
+  :
 }
 
 # PRE

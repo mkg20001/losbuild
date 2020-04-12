@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
     <!-- F-Droid -->
+    <remote name="gitlab" fetch="https://gitlab.com" />
     <project name="fdroid/android_vendor_fdroid"
- path="vendor/fdroid"
- remote="gitlab"
- revision="master" />
+     path="vendor/fdroid"
+     remote="gitlab"
+     revision="master" />
 </manifest>

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
+# set -euo pipefail
 
 SELF=$(dirname $(readlink -f $0))
 
@@ -29,7 +29,7 @@ if [ -d "$HOME/bin" ] ; then
     PATH="$HOME/bin:$PATH"
 fi
 
-pushd ~/android/lineage
+cd ~/android/lineage
 
 if [ ! -e .repo ]; then
   repo init -u https://github.com/LineageOS/android.git -b "lineage-$DEVICE"
@@ -59,14 +59,15 @@ add_snip() {
 }
 
 pre_los() {
-  ::
+  :
+  # the muppets does this for us
   # pushd "~/android/lineage/device/$SLUG"
   # ./extract-files.sh
   # popd
 }
 
 post_los() {
-  ::
+  :
   breakfast "$DEVICE"
 }
 
@@ -76,9 +77,16 @@ pre_gapps() {
 }
 
 post_gapps() {
-  pushd vendor/fdroid
-  ./get_packages.sh
-  popd
+  DEV_FILE="device/$SLUG/device-$DEVICE.mk"
+  cp "$DEV_FILE" "$DEV_FILE.bak"
+  sed -i "1s|^|GAPPS_VARIANT := $GAPPS_VARIANT\n|" "$DEV_FILE"
+  echo '$(call inherit-product, vendor/opengapps/build/opengapps-packages.mk)' >> "$DEV_FILE"
+
+  for src in vendor/opengapps/sources/*; do
+    pushd $src
+    git lfs pull
+    popd
+  done
 }
 
 pre_fdroid() {
@@ -96,20 +104,22 @@ pre_muppets() {
 }
 
 post_muppets() {
-  ::
+  :
   # nothing, congrats!
 }
 
 post_fdroid() {
-  DEV_FILE="device/$SLUG/device.mk"
-  cp "$DEV_FILE" "$DEV_FILE.bak"
-  sed -i "1s|^|GAPPS_VARIANT := $GAPPS_VARIANT|" "$DEV_FILE"
-  echo '$(call inherit-product, vendor/opengapps/build/opengapps-packages.mk)' >> "$DEV_FILE"
+  pushd vendor/fdroid
+  bash $SELF/make-fdroid-list.sh
+  echo "-app/org.fdroid.fdroid_1001002.apk:app/FDroid.apk;PRESIGNED
+-priv-app/org.fdroid.fdroid.privileged_2070.apk:priv-app/FDroidPrivilegedExtension.apk;PRESIGNED"
+  ./get_packages.sh
+  popd
 }
 
 # PRE
 
-for $pkg in $PACKAGES; do
+for pkg in $PACKAGES; do
   "pre_$pkg"
 done
 
@@ -121,7 +131,7 @@ repo sync
 
 source build/envsetup.sh
 
-for $pkg in $PACKAGES; do
+for pkg in $PACKAGES; do
   "post_$pkg"
 done
 

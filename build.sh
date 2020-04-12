@@ -17,18 +17,7 @@ GAPPS_VARIANT="nano"
 SLUG="$VENDOR/$DEVICE"
 PACKAGES="muppets los $PACKAGES"
 
-mkdir -p ~/bin
 mkdir -p ~/android/lineage
-
-if [ ! -e ~/bin/repo ]; then
-  curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-  chmod a+x ~/bin/repo
-fi
-
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
-fi
-
 cd ~/android/lineage
 
 if [ ! -e .repo ]; then

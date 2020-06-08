@@ -94,6 +94,7 @@ post_fdroid() {
 -priv-app/org.fdroid.fdroid.privileged_2070.apk:priv-app/FDroidPrivilegedExtension.apk;PRESIGNED"
   ./get_packages.sh
   popd
+  export WITH_FDROID=true
 }
 
 pre_muppets() {
@@ -142,7 +143,7 @@ done
 
 # MAIN
 
-repo sync
+repo sync -j4
 
 # POST
 
